@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoring Data Kependudukan – Kecamatan IV Nagari 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue: #1a56db;
+    --blue-light: #e8f0fe;
+    --teal: #0e9f6e;
+    --teal-light: #def7ec;
+    --red: #e02424;
+    --red-light: #fde8e8;
+    --amber: #c27803;
+    --amber-light: #fdf6b2;
+    --purple: #7e3af2;
+    --purple-light: #edebfe;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-400: #9ca3af;
+    --gray-600: #4b5563;
+    --gray-800: #1f2937;
+    --white: #ffffff;
+  }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .site-header {
+    background: linear-gradient(135deg, #1a3c6e 0%, #1a56db 100%);
+    color: white;
+    padding: 0;
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 28px 24px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .header-icon {
+    width: 60px; height: 60px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; flex-shrink: 0;
+  }
+  .header-text h1 {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .header-text p { font-size: 14px; opacity: 0.8; }
+  .header-tabs {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex; gap: 4px;
+  }
+  .tab-btn {
+    padding: 10px 20px;
+    border: none; cursor: pointer;
+    font-size: 14px; font-weight: 500;
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: white; }
+  .tab-btn.active { color: white; border-bottom-color: white; }
+
+  /* MAIN */
+  main { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+
+  /* FILTER BAR */
+  .filter-bar {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .filter-bar label { font-size: 13px; font-weight: 600; color: var(--gray-600); white-space: nowrap; }
+  .filter-bar select {
+    padding: 8px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--gray-800);
+    background: var(--gray-50);
+    cursor: pointer;
+  }
+  .filter-bar select:focus { outline: none; border-color: var(--blue); }
+  .update-badge {
+    margin-left: auto;
+    background: var(--teal-light);
+    color: #065f46;
+    font-size: 12px; font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+
+  /* STAT CARDS */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 18px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.teal::before { background: var(--teal); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-card.amber::before { background: var(--amber); }
+  .stat-card.purple::before { background: var(--purple); }
+  .stat-card.indigo::before { background: #4f46e5; }
+  .stat-label { font-size: 12px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--gray-800); line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+  .stat-delta {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 12px; font-weight: 600;
+    margin-top: 6px;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .delta-up { background: var(--teal-light); color: #065f46; }
+  .delta-down { background: var(--red-light); color: #991b1b; }
+  .delta-zero { background: var(--gray-100); color: var(--gray-600); }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 16px; font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title span { font-size: 20px; }
+
+  /* CHART GRID */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+  .chart-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .chart-title {
+    font-size: 14px; font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 4px;
+  }
+  .chart-sub { font-size: 12px; color: var(--gray-400); margin-bottom: 16px; }
+
+  /* TABLE */
+  .table-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .table-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-header .title { font-size: 14px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--gray-50);
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px; font-weight: 700;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  thead th.right { text-align: right; }
+  tbody td {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  tbody td.right { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--gray-50); }
+  .tfoot-row td {
+    background: #1a3c6e;
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+  .tfoot-row td.right { text-align: right; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge-blue { background: var(--blue-light); color: #1e40af; }
+  .badge-teal { background: var(--teal-light); color: #065f46; }
+  .badge-red { background: var(--red-light); color: #991b1b; }
+  .badge-amber { background: var(--amber-light); color: #92400e; }
+  .badge-purple { background: var(--purple-light); color: #5b21b6; }
+
+  /* DETAIL TAB */
+  .detail-section { display: none; }
+  .detail-section.active { display: block; }
+  .overview-section { display: none; }
+  .overview-section.active { display: block; }
+
+  /* PROGRESS BARS */
+  .nagari-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .nagari-name { font-size: 13px; font-weight: 600; min-width: 110px; color: var(--gray-800); }
+  .bar-wrap { flex: 1; background: var(--gray-100); border-radius: 6px; height: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
+  .nagari-val { font-size: 13px; font-weight: 700; min-width: 50px; text-align: right; color: var(--gray-600); }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 24px;
+    color: var(--gray-400);
+    font-size: 12px;
+    border-top: 1px solid var(--gray-200);
+    background: white;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .header-inner { flex-direction: column; text-align: center; }
+    main { padding: 16px; }
+    .stat-value { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-icon">🏛️</div>
+    <div class="header-text">
+      <h1>Monitoring Data Kependudukan</h1>
+      <p>Kecamatan IV Nagari &nbsp;·&nbsp; Kabupaten Sijunjung &nbsp;·&nbsp; Tahun 2026</p>
+    </div>
+  </div>
+  <div class="header-tabs">
+    <button class="tab-btn active" onclick="showTab('overview')">📊 Ringkasan</button>
+    <button class="tab-btn" onclick="showTab('detail')">📋 Data Nagari</button>
+    <button class="tab-btn" onclick="showTab('trend')">📈 Tren Bulanan</button>
+  </div>
+</header>
+
+<main>
+  <div class="filter-bar">
+    <label>Periode:</label>
+    <select id="bulanFilter" onchange="updateAll()">
+      <option value="APRIL">April 2026</option>
+      <option value="MARET">Maret 2026</option>
+      <option value="FEBRUARI">Februari 2026</option>
+      <option value="JANUARI">Januari 2026</option>
+    </select>
+    <label>Nagari:</label>
+    <select id="nagariFilter" onchange="updateAll()">
+      <option value="ALL">Semua Nagari</option>
+      <option value="Palangki">Palangki</option>
+      <option value="Muaro Bodi">Muaro Bodi</option>
+      <option value="Koto Baru">Koto Baru</option>
+      <option value="Mundam Sakti">Mundam Sakti</option>
+      <option value="Koto Tuo">Koto Tuo</option>
+    </select>
+    <span class="update-badge">✓ Data Jan–Apr 2026</span>
+  </div>
+
+  <!-- ===== OVERVIEW TAB ===== -->
+  <div class="overview-section active" id="tab-overview">
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Jumlah Penduduk Akhir Bulan</div>
+        <div class="chart-sub">Perbandingan antar nagari · bulan terpilih</div>
+        <div style="position:relative;height:220px;"><canvas id="chartNagari" role="img" aria-label="Bar chart jumlah penduduk per nagari">Data jumlah penduduk per nagari.</canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Komposisi Jenis Kelamin</div>
+        <div class="chart-sub">Laki-laki vs Perempuan · total kecamatan</div>
+        <div style="display:flex;gap:12px;margin-bottom:12px;" id="genderLegend"></div>
+        <div style="position:relative;height:196px;"><canvas id="chartGender" role="img" aria-label="Donut chart gender">Data gender penduduk.</canvas></div>
+      </div>
+    </div>
+
+    <div class="section-title"><span>🏘️</span> Distribusi Penduduk per Nagari</div>
+    <div class="table-card">
+      <div style="padding:16px 20px 4px;">
+        <div id="nagariProgress"></div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:12px;"><span>📅</span> Rekapitulasi Mutasi Penduduk</div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Nagari</th>
+            <th class="right">Awal Bulan</th>
+            <th class="right">Lahir</th>
+            <th class="right">Meninggal</th>
+            <th class="right">Datang</th>
+            <th class="right">Pindah</th>
+            <th class="right">Akhir Bulan</th>
+            <th class="right">Jml KK</th>
+          </tr>
+        </thead>
+        <tbody id="rekapTable"></tbody>
+        <tfoot id="rekapTfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== DETAIL TAB ===== -->
+  <div class="detail-section" id="tab-detail">
+    <div class="section-title"><span>📋</span> Rincian Data per Nagari</div>
+    <div id="detailCards"></div>
+  </div>
+
+  <!-- ===== TREND TAB ===== -->
+  <div class="detail-section" id="tab-trend">
+    <div class="section-title"><span>📈</span> Tren Kependudukan Januari – April 2026</div>
+
+    <div class="chart-grid">
+      <div class="chart-card" style="grid-column: 1 / -1;">
+        <div class="chart-title">Total Penduduk Kecamatan IV Nagari</div>
+        <div class="chart-sub">Perkembangan jumlah penduduk akhir bulan</div>
+        <div style="position:relative;height:260px;"><canvas id="chartTrendTotal" role="img" aria-label="Line chart tren total penduduk">Tren penduduk Jan–Apr 2026.</canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Kelahiran & Kematian per Bulan</div>
+        <div class="chart-sub">Mutasi alami penduduk kecamatan</div>
+        <div style="position:relative;height:240px;"><canvas id="chartTrendMutasi" role="img" aria-label="Bar chart kelahiran kematian">Data kelahiran dan kematian.</canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Pendatang & Pindah per Bulan</div>
+        <div class="chart-sub">Mutasi migrasi penduduk kecamatan</div>
+        <div style="position:relative;height:240px;"><canvas id="chartTrendMigrasi" role="img" aria-label="Bar chart pendatang pindah">Data pendatang dan pindah.</canvas></div>
+      </div>
+    </div>
+
+    <div class="section-title"><span>📊</span> Tren per Nagari</div>
+    <div class="chart-card">
+      <div class="chart-title">Jumlah Penduduk Akhir Bulan per Nagari</div>
+      <div class="chart-sub">Perbandingan 5 nagari selama Jan–Apr 2026</div>
+      <div style="position:relative;height:300px;"><canvas id="chartTrendNagari" role="img" aria-label="Line chart tren per nagari">Tren per nagari.</canvas></div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Sistem Monitoring Data Kependudukan · Kecamatan IV Nagari · Kabupaten Sijunjung &nbsp;|&nbsp; Data: Januari – April 2026
+</footer>
+
+<script>
+// ===== DATA =====
+const DATA = {
+  JANUARI: {
+    total: { awal:15615, lahir:13, mati:9, datang:12, pindah:14, akhir:15617, kk:4604, L:7772, P:7845 },
+    nagari: [
+      { nama:'Palangki',     awal:3970, lahir:4, mati:1, datang:0,  pindah:2,  akhir:3971, kk:1168, badge:'blue' },
+      { nama:'Muaro Bodi',   awal:3547, lahir:2, mati:2, datang:5,  pindah:0,  akhir:3552, kk:1002, badge:'teal' },
+      { nama:'Koto Baru',    awal:3208, lahir:4, mati:5, datang:7,  pindah:11, akhir:3203, kk:1014, badge:'amber' },
+      { nama:'Mundam Sakti', awal:3075, lahir:3, mati:0, datang:0,  pindah:1,  akhir:3077, kk:866,  badge:'purple' },
+      { nama:'Koto Tuo',     awal:1815, lahir:0, mati:1, datang:0,  pindah:0,  akhir:1814, kk:554,  badge:'red' },
+    ]
+  },
+  FEBRUARI: {
+    total: { awal:15618, lahir:10, mati:11, datang:9, pindah:9, akhir:15617, kk:4603, L:7777, P:7840 },
+    nagari: [
+      { nama:'Palangki',     awal:3971, lahir:4, mati:2, datang:0,  pindah:1,  akhir:3972, kk:1167, badge:'blue' },
+      { nama:'Muaro Bodi',   awal:3552, lahir:1, mati:4, datang:2,  pindah:0,  akhir:3551, kk:1002, badge:'teal' },
+      { nama:'Koto Baru',    awal:3204, lahir:2, mati:2, datang:7,  pindah:6,  akhir:3205, kk:1014, badge:'amber' },
+      { nama:'Mundam Sakti', awal:3077, lahir:2, mati:3, datang:0,  pindah:0,  akhir:3076, kk:866,  badge:'purple' },
+      { nama:'Koto Tuo',     awal:1814, lahir:1, mati:0, datang:0,  pindah:2,  akhir:1813, kk:554,  badge:'red' },
+    ]
+  },
+  MARET: {
+    total: { awal:15617, lahir:15, mati:10, datang:12, pindah:7, akhir:15627, kk:4602, L:7788, P:7839 },
+    nagari: [
+      { nama:'Palangki',     awal:3972, lahir:3, mati:2, datang:4,  pindah:5,  akhir:3972, kk:1166, badge:'blue' },
+      { nama:'Muaro Bodi',   awal:3551, lahir:4, mati:2, datang:7,  pindah:0,  akhir:3560, kk:1002, badge:'teal' },
+      { nama:'Koto Baru',    awal:3205, lahir:1, mati:4, datang:1,  pindah:0,  akhir:3203, kk:1014, badge:'amber' },
+      { nama:'Mundam Sakti', awal:3076, lahir:6, mati:2, datang:0,  pindah:2,  akhir:3078, kk:866,  badge:'purple' },
+      { nama:'Koto Tuo',     awal:1813, lahir:1, mati:0, datang:0,  pindah:0,  akhir:1814, kk:554,  badge:'red' },
+    ]
+  },
+  APRIL: {
+    total: { awal:15621, lahir:16, mati:14, datang:22, pindah:12, akhir:15633, kk:4596, L:7793, P:7840 },
+    nagari: [
+      { nama:'Palangki',     awal:3972, lahir:4, mati:5, datang:0,  pindah:5,  akhir:3966, kk:1164, badge:'blue' },
+      { nama:'Muaro Bodi',   awal:3559, lahir:3, mati:4, datang:0,  pindah:0,  akhir:3558, kk:1002, badge:'teal' },
+      { nama:'Koto Baru',    awal:3204, lahir:7, mati:1, datang:16, pindah:4,  akhir:3222, kk:1013, badge:'amber' },
+      { nama:'Mundam Sakti', awal:3072, lahir:2, mati:1, datang:3,  pindah:0,  akhir:3076, kk:862,  badge:'purple' },
+      { nama:'Koto Tuo',     awal:1814, lahir:0, mati:3, datang:3,  pindah:3,  akhir:1811, kk:555,  badge:'red' },
+    ]
+  }
+};
+
+const BULAN_LABEL = { JANUARI:'Januari 2026', FEBRUARI:'Februari 2026', MARET:'Maret 2026', APRIL:'April 2026' };
+const BADGE_COLORS = { blue:'#1a56db', teal:'#0e9f6e', amber:'#c27803', purple:'#7e3af2', red:'#e02424' };
+
+let chartNagari = null, chartGender = null, chartTrendTotal = null, chartTrendMutasi = null, chartTrendMigrasi = null, chartTrendNagari = null;
+
+function n(v) { return isNaN(v) ? 0 : Number(v); }
+function fmt(v) { return n(v).toLocaleString('id-ID'); }
+function delta(v) {
+  if (v > 0) return `<span class="stat-delta delta-up">▲ ${v}</span>`;
+  if (v < 0) return `<span class="stat-delta delta-down">▼ ${Math.abs(v)}</span>`;
+  return `<span class="stat-delta delta-zero">= 0</span>`;
+}
+
+function getBulan() { return document.getElementById('bulanFilter').value; }
+function getNagari() { return document.getElementById('nagariFilter').value; }
+
+function getDataForFilter() {
+  const bulan = getBulan();
+  const nagari = getNagari();
+  const d = DATA[bulan];
+  if (nagari === 'ALL') return { total: d.total, nagari: d.nagari };
+  const n = d.nagari.find(x => x.nama === nagari);
+  if (!n) return { total: d.total, nagari: d.nagari };
+  const fakeTotal = { awal: n.awal, lahir: n.lahir, mati: n.mati, datang: n.datang, pindah: n.pindah, akhir: n.akhir, kk: n.kk,
+    L: Math.round(n.akhir * 0.498), P: n.akhir - Math.round(n.akhir * 0.498) };
+  return { total: fakeTotal, nagari: [n] };
+}
+
+function updateStats() {
+  const { total } = getDataForFilter();
+  const bulan = getBulan();
+  const orders = ['JANUARI','FEBRUARI','MARET','APRIL'];
+  const idx = orders.indexOf(bulan);
+  const prevBulan = idx > 0 ? orders[idx-1] : null;
+  let prevAkhir = prevBulan ? (getNagari() === 'ALL' ? DATA[prevBulan].total.akhir : (DATA[prevBulan].nagari.find(x=>x.nama===getNagari())||DATA[prevBulan].total).akhir) : null;
+  const pertumbuhan = prevAkhir ? total.akhir - prevAkhir : null;
+
+  document.getElementById('statGrid').innerHTML = `
+    <div class="stat-card blue">
+      <div class="stat-label">Total Penduduk</div>
+      <div class="stat-value">${fmt(total.akhir)}</div>
+      <div class="stat-sub">Akhir ${BULAN_LABEL[bulan]}</div>
+      ${pertumbuhan !== null ? delta(pertumbuhan) : ''}
+    </div>
+    <div class="stat-card teal">
+      <div class="stat-label">Kelahiran</div>
+      <div class="stat-value">${fmt(total.lahir)}</div>
+      <div class="stat-sub">Jiwa lahir bulan ini</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Kematian</div>
+      <div class="stat-value">${fmt(total.mati)}</div>
+      <div class="stat-sub">Jiwa meninggal bulan ini</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-label">Pendatang</div>
+      <div class="stat-value">${fmt(total.datang)}</div>
+      <div class="stat-sub">Jiwa masuk bulan ini</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">Pindah</div>
+      <div class="stat-value">${fmt(total.pindah)}</div>
+      <div class="stat-sub">Jiwa pindah bulan ini</div>
+    </div>
+    <div class="stat-card indigo">
+      <div class="stat-label">Kepala Keluarga</div>
+      <div class="stat-value">${fmt(total.kk)}</div>
+      <div class="stat-sub">Jumlah KK</div>
+    </div>
+  `;
+}
+
+function updateChartNagari() {
+  const bulan = getBulan();
+  const d = DATA[bulan];
+  const labels = d.nagari.map(x => x.nama);
+  const values = d.nagari.map(x => x.akhir);
+  const colors = d.nagari.map(x => BADGE_COLORS[x.badge]);
+  const ctx = document.getElementById('chartNagari').getContext('2d');
+  if (chartNagari) chartNagari.destroy();
+  chartNagari = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Penduduk', data: values, backgroundColor: colors, borderRadius: 6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: false, grid: { color: '#f3f4f6' }, ticks: { callback: v => v.toLocaleString('id-ID') } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function updateChartGender() {
+  const bulan = getBulan();
+  const d = DATA[bulan].total;
+  const ctx = document.getElementById('chartGender').getContext('2d');
+  const pctL = ((d.L / d.akhir) * 100).toFixed(1);
+  const pctP = ((d.P / d.akhir) * 100).toFixed(1);
+  document.getElementById('genderLegend').innerHTML = `
+    <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#4b5563;">
+      <span style="width:10px;height:10px;border-radius:2px;background:#1a56db;display:inline-block;"></span>
+      Laki-laki ${pctL}% (${fmt(d.L)})
+    </span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#4b5563;">
+      <span style="width:10px;height:10px;border-radius:2px;background:#7e3af2;display:inline-block;"></span>
+      Perempuan ${pctP}% (${fmt(d.P)})
+    </span>
+  `;
+  if (chartGender) chartGender.destroy();
+  chartGender = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels: ['Laki-laki','Perempuan'], datasets: [{ data: [d.L, d.P], backgroundColor: ['#1a56db','#7e3af2'], borderWidth: 2, borderColor: '#fff' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '65%' }
+  });
+}
+
+function updateProgress() {
+  const bulan = getBulan();
+  const d = DATA[bulan];
+  const max = Math.max(...d.nagari.map(x => x.akhir));
+  const el = document.getElementById('nagariProgress');
+  el.innerHTML = d.nagari.map(x => `
+    <div class="nagari-row">
+      <div class="nagari-name">${x.nama}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${(x.akhir/max*100).toFixed(1)}%;background:${BADGE_COLORS[x.badge]};"></div></div>
+      <div class="nagari-val">${fmt(x.akhir)}</div>
+    </div>
+  `).join('');
+}
+
+function updateTable() {
+  const { nagari, total } = getDataForFilter();
+  const bulan = getBulan();
+  const tbody = document.getElementById('rekapTable');
+  tbody.innerHTML = nagari.map(x => `
+    <tr>
+      <td><span class="badge badge-${x.badge}">${x.nama}</span></td>
+      <td class="right">${fmt(x.awal)}</td>
+      <td class="right" style="color:#0e9f6e;font-weight:600;">${fmt(x.lahir)}</td>
+      <td class="right" style="color:#e02424;font-weight:600;">${fmt(x.mati)}</td>
+      <td class="right" style="color:#1a56db;">${fmt(x.datang)}</td>
+      <td class="right" style="color:#c27803;">${fmt(x.pindah)}</td>
+      <td class="right" style="font-weight:700;">${fmt(x.akhir)}</td>
+      <td class="right">${fmt(x.kk)}</td>
+    </tr>
+  `).join('');
+  const tfoot = document.getElementById('rekapTfoot');
+  if (getNagari() === 'ALL') {
+    tfoot.innerHTML = `<tr class="tfoot-row">
+      <td>TOTAL KECAMATAN</td>
+      <td class="right">${fmt(total.awal)}</td>
+      <td class="right">${fmt(total.lahir)}</td>
+      <td class="right">${fmt(total.mati)}</td>
+      <td class="right">${fmt(total.datang)}</td>
+      <td class="right">${fmt(total.pindah)}</td>
+      <td class="right">${fmt(total.akhir)}</td>
+      <td class="right">${fmt(total.kk)}</td>
+    </tr>`;
+  } else { tfoot.innerHTML = ''; }
+}
+
+function updateDetailCards() {
+  const bulan = getBulan();
+  const d = DATA[bulan];
+  const el = document.getElementById('detailCards');
+  el.innerHTML = d.nagari.map(x => `
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:14px;border-left:4px solid ${BADGE_COLORS[x.badge]};">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#1f2937;">Nagari ${x.nama}</h3>
+          <p style="font-size:12px;color:#9ca3af;">${BULAN_LABEL[bulan]}</p>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:24px;font-weight:700;color:${BADGE_COLORS[x.badge]};">${fmt(x.akhir)}</div>
+          <div style="font-size:11px;color:#9ca3af;">jiwa · ${fmt(x.kk)} KK</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;border-top:1px solid #f3f4f6;padding-top:14px;">
+        <div style="text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#0e9f6e;">${x.lahir}</div>
+          <div style="font-size:11px;color:#9ca3af;">Lahir</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#e02424;">${x.mati}</div>
+          <div style="font-size:11px;color:#9ca3af;">Meninggal</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#1a56db;">${x.datang}</div>
+          <div style="font-size:11px;color:#9ca3af;">Datang</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#c27803;">${x.pindah}</div>
+          <div style="font-size:11px;color:#9ca3af;">Pindah</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function buildTrendCharts() {
+  const bulanList = ['JANUARI','FEBRUARI','MARET','APRIL'];
+  const labels = ['Jan','Feb','Mar','Apr'];
+
+  // Total trend
+  const totals = bulanList.map(b => DATA[b].total.akhir);
+  const ctx1 = document.getElementById('chartTrendTotal').getContext('2d');
+  if (chartTrendTotal) chartTrendTotal.destroy();
+  chartTrendTotal = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Total Penduduk', data: totals,
+        borderColor: '#1a56db', backgroundColor: 'rgba(26,86,219,0.08)',
+        fill: true, tension: 0.4, pointRadius: 6, pointBackgroundColor: '#1a56db', borderWidth: 2.5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { grid: { color: '#f3f4f6' }, ticks: { callback: v => v.toLocaleString('id-ID') } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Mutasi alami
+  const lahirData = bulanList.map(b => DATA[b].total.lahir);
+  const matiData = bulanList.map(b => DATA[b].total.mati);
+  const ctx2 = document.getElementById('chartTrendMutasi').getContext('2d');
+  if (chartTrendMutasi) chartTrendMutasi.destroy();
+  chartTrendMutasi = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Lahir', data: lahirData, backgroundColor: '#0e9f6e', borderRadius: 4 },
+        { label: 'Meninggal', data: matiData, backgroundColor: '#e02424', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 12 } } } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Migrasi
+  const datangData = bulanList.map(b => DATA[b].total.datang);
+  const pindahData = bulanList.map(b => DATA[b].total.pindah);
+  const ctx3 = document.getElementById('chartTrendMigrasi').getContext('2d');
+  if (chartTrendMigrasi) chartTrendMigrasi.destroy();
+  chartTrendMigrasi = new Chart(ctx3, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Pendatang', data: datangData, backgroundColor: '#1a56db', borderRadius: 4 },
+        { label: 'Pindah', data: pindahData, backgroundColor: '#c27803', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 12 } } } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Per nagari trend
+  const nagariNames = ['Palangki','Muaro Bodi','Koto Baru','Mundam Sakti','Koto Tuo'];
+  const nagariColors = ['#1a56db','#0e9f6e','#c27803','#7e3af2','#e02424'];
+  const nagariDatasets = nagariNames.map((nm, i) => ({
+    label: nm,
+    data: bulanList.map(b => DATA[b].nagari.find(x => x.nama === nm)?.akhir || 0),
+    borderColor: nagariColors[i],
+    backgroundColor: nagariColors[i] + '15',
+    tension: 0.4, fill: false, pointRadius: 4, borderWidth: 2
+  }));
+  const ctx4 = document.getElementById('chartTrendNagari').getContext('2d');
+  if (chartTrendNagari) chartTrendNagari.destroy();
+  chartTrendNagari = new Chart(ctx4, {
+    type: 'line',
+    data: { labels, datasets: nagariDatasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 12 } } } },
+      scales: {
+        y: { grid: { color: '#f3f4f6' }, ticks: { callback: v => v.toLocaleString('id-ID') } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function updateAll() {
+  updateStats();
+  updateChartNagari();
+  updateChartGender();
+  updateProgress();
+  updateTable();
+  updateDetailCards();
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.overview-section, .detail-section').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); });
+  event.target.classList.add('active');
+  if (tab === 'overview') {
+    document.getElementById('tab-overview').style.display = 'block';
+    document.getElementById('tab-overview').classList.add('active');
+  } else if (tab === 'detail') {
+    document.getElementById('tab-detail').style.display = 'block';
+    document.getElementById('tab-detail').classList.add('active');
+    updateDetailCards();
+  } else if (tab === 'trend') {
+    document.getElementById('tab-trend').style.display = 'block';
+    document.getElementById('tab-trend').classList.add('active');
+    setTimeout(buildTrendCharts, 50);
+  }
+}
+
+// Init
+updateAll();
+document.getElementById('tab-overview').style.display = 'block';
+</script>
+</body>
+</html>
